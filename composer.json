@@ -3,7 +3,7 @@
   "description": "Laravel package for Meta WhatsApp Business Cloud API: templates CRUD, sending messages, multi-account, broadcasts, webhooks.",
   "version": "1.0.0",
   "type": "library",
-  "license": "APACHE 2.0",
+  "license": "Apache-2.0",
   "autoload": {
     "psr-4": {
       "ESolution\\WhatsApp\\": "src/"
