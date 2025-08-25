@@ -23,5 +23,5 @@ return [
 
     'queue' => env('WHATSAPP_QUEUE', null),
 
-    'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com/v20.0'),
+    'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com/v23.0'),
 ];

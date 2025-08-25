@@ -11,7 +11,7 @@ class WhatsAppService
 
     protected function endpoint(WhatsAppAccount $acc, string $path): string
     {
-        $base = rtrim($this->config['base_url'] ?? 'https://graph.facebook.com/v20.0','/');
+        $base = rtrim($this->config['base_url'] ?? 'https://graph.facebook.com/v23.0','/');
         return "{$base}/{$acc->phone_number_id}/{$path}";
     }
 
@@ -43,7 +43,7 @@ class WhatsAppService
         return $this->sendRaw($acc, $payload);
     }
 
-    public function sendTemplate(WhatsAppAccount $acc, string $to, string $templateName, string $lang = 'en_US', array $components = []): array
+    public function sendTemplate(WhatsAppAccount $acc, string $to, string $templateName, string $lang = 'id_ID', array $components = []): array
     {
         $payload = [
             'messaging_product' => 'whatsapp',
