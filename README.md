@@ -200,3 +200,16 @@ Statuses are saved to:
 - Store and log Graph API responses for error analysis.
 
 ---
+
+## Support & Hiring
+
+Need professional help or want to move faster? **Hire the E-Solution / Elgibor team** for integration, audits, or custom features.  
+📧 **info@elgibor-solution.com**
+
+---
+
+## Donations
+
+If this package saves you time, consider supporting development ❤️
+
+- **Ko‑fi**: [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U7U21L7D5J)
