@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use ESolution\WhatsApp\Models\{WhatsAppBroadcast, WhatsAppBroadcastRecipient, WhatsAppMessage, WhatsAppAccount};
+use ESolution\WhatsApp\Models\{WhatsappBroadcast, WhatsappBroadcastRecipient, WhatsAppMessage, WhatsappAccount};
 
 class SendBroadcastChunkJob implements ShouldQueue
 {
@@ -21,13 +21,13 @@ class SendBroadcastChunkJob implements ShouldQueue
 
     public function handle(): void
     {
-        $b = WhatsAppBroadcast::find($this->broadcastId);
+        $b = WhatsappBroadcast::find($this->broadcastId);
         if (!$b || $b->status === 'paused') return;
 
-        $acc = WhatsAppAccount::resolve($b->whatsapp_account_id);
+        $acc = WhatsappAccount::resolve($b->whatsapp_account_id);
         $rpm = max(60, (int)$b->rate_per_min);
 
-        foreach (WhatsAppBroadcastRecipient::whereIn('id', $this->recipientIds)->cursor() as $rec) {
+        foreach (WhatsappBroadcastRecipient::whereIn('id', $this->recipientIds)->cursor() as $rec) {
             RateLimiter::attempt(
                 'wa-broadcast:'.$acc->phone_number_id,
                 $rpm,

@@ -71,9 +71,9 @@ All endpoints are available with prefix `/whatsapp/*`:
 
 ```php
 use WhatsApp;
-use Esolution\WhatsApp\Models\WhatsAppAccount;
+use Esolution\WhatsApp\Models\WhatsappAccount;
 
-$acc = WhatsAppAccount::resolve();
+$acc = WhatsappAccount::resolve();
 
 // 1. Send text
 WhatsApp::sendText($acc, '08123456789', 'Hello from Cloud API!');
@@ -115,7 +115,7 @@ WhatsApp::sendInteractive($acc, '08123456789', [
 ## 📜 Template CRUD
 
 ```php
-$acc = WhatsAppAccount::resolve();
+$acc = WhatsappAccount::resolve();
 
 // List
 $list = WhatsApp::listTemplates($acc);

@@ -4,14 +4,14 @@ namespace ESolution\WhatsApp\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use ESolution\WhatsApp\Models\{WhatsAppAccount, WhatsAppTemplate};
+use ESolution\WhatsApp\Models\{WhatsappAccount, WhatsappTemplate};
 use ESolution\WhatsApp\Services\WhatsAppService;
 
 class TemplateController extends Controller
 {
     public function index(Request $r)
     {
-        return WhatsAppTemplate::query()
+        return WhatsappTemplate::query()
             ->when($r->whatsapp_account_id, fn($q,$id)=>$q->where('whatsapp_account_id',$id))
             ->paginate($r->get('per_page', 25));
     }
@@ -27,8 +27,8 @@ class TemplateController extends Controller
             'sync_to_meta' => 'boolean'
         ]);
 
-        $acc = WhatsAppAccount::resolve($data['whatsapp_account_id'] ?? null);
-        $tpl = WhatsAppTemplate::create([
+        $acc = WhatsappAccount::resolve($data['whatsapp_account_id'] ?? null);
+        $tpl = WhatsappTemplate::create([
             'whatsapp_account_id' => $acc->id ?: ($data['whatsapp_account_id'] ?? null),
             'name' => $data['name'],
             'language' => $data['language'],
@@ -49,25 +49,25 @@ class TemplateController extends Controller
         return response()->json($tpl, 201);
     }
 
-    public function show($id) { return WhatsAppTemplate::findOrFail($id); }
+    public function show($id) { return WhatsappTemplate::findOrFail($id); }
 
     public function update($id, Request $r)
     {
-        $tpl = WhatsAppTemplate::findOrFail($id);
+        $tpl = WhatsappTemplate::findOrFail($id);
         $tpl->update($r->only(['name','language','category','components','status']));
         return $tpl;
     }
 
     public function destroy($id) {
-        $tpl = WhatsAppTemplate::findOrFail($id);
+        $tpl = WhatsappTemplate::findOrFail($id);
         $tpl->delete();
         return response()->json(['deleted'=>true]);
     }
 
     public function syncFromMeta($id, WhatsAppService $svc)
     {
-        $tpl = WhatsAppTemplate::findOrFail($id);
-        $acc = WhatsAppAccount::resolve($tpl->whatsapp_account_id);
+        $tpl = WhatsappTemplate::findOrFail($id);
+        $acc = WhatsappAccount::resolve($tpl->whatsapp_account_id);
         return response()->json(['message'=>'Sync placeholder - filter from $svc->listTemplates()']);
     }
 }

@@ -4,7 +4,7 @@ namespace ESolution\WhatsApp\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use ESolution\WhatsApp\Models\{WhatsAppAccount, WhatsAppMessage};
+use ESolution\WhatsApp\Models\{WhatsappAccount, WhatsAppMessage};
 use ESolution\WhatsApp\Jobs\SendMessageJob;
 
 class MessageController extends Controller
@@ -18,7 +18,7 @@ class MessageController extends Controller
             'payload' => 'required|array'
         ]);
 
-        $acc = WhatsAppAccount::resolve($data['whatsapp_account_id'] ?? null);
+        $acc = WhatsappAccount::resolve($data['whatsapp_account_id'] ?? null);
 
         $msg = WhatsAppMessage::create([
             'whatsapp_account_id' => $acc->id ?: ($data['whatsapp_account_id'] ?? null),

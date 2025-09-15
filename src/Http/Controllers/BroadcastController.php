@@ -4,13 +4,13 @@ namespace ESolution\WhatsApp\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use ESolution\WhatsApp\Models\{WhatsAppBroadcast, WhatsAppBroadcastRecipient, WhatsAppAccount};
+use ESolution\WhatsApp\Models\{WhatsappBroadcast, WhatsappBroadcastRecipient, WhatsappAccount};
 
 class BroadcastController extends Controller
 {
     public function index(Request $r)
     {
-        return WhatsAppBroadcast::query()
+        return WhatsappBroadcast::query()
             ->when($r->status, fn($q,$s)=>$q->where('status',$s))
             ->paginate($r->get('per_page', 25));
     }
@@ -27,9 +27,9 @@ class BroadcastController extends Controller
             'rate_per_min' => 'nullable|integer',
         ]);
 
-        $acc = WhatsAppAccount::resolve($data['whatsapp_account_id'] ?? null);
+        $acc = WhatsappAccount::resolve($data['whatsapp_account_id'] ?? null);
 
-        $b = WhatsAppBroadcast::create([
+        $b = WhatsappBroadcast::create([
             'whatsapp_account_id' => $acc->id ?: ($data['whatsapp_account_id'] ?? null),
             'name' => $data['name'],
             'type' => $data['type'],
@@ -50,7 +50,7 @@ class BroadcastController extends Controller
             ];
         }
         foreach (array_chunk($rows, 1000) as $chunk) {
-            WhatsAppBroadcastRecipient::insert($chunk);
+            WhatsappBroadcastRecipient::insert($chunk);
         }
 
         return response()->json(['id'=>$b->id,'created'=>true]);
@@ -58,7 +58,7 @@ class BroadcastController extends Controller
 
     public function schedule($id, Request $r)
     {
-        $b = WhatsAppBroadcast::findOrFail($id);
+        $b = WhatsappBroadcast::findOrFail($id);
         $data = $r->validate(['scheduled_at'=>'required|date']);
         $b->scheduled_at = $data['scheduled_at'];
         $b->status = 'scheduled';
@@ -67,12 +67,12 @@ class BroadcastController extends Controller
     }
 
     public function pause($id) {
-        $b = WhatsAppBroadcast::findOrFail($id);
+        $b = WhatsappBroadcast::findOrFail($id);
         $b->status = 'paused'; $b->save();
         return ['paused'=>true];
     }
     public function resume($id) {
-        $b = WhatsAppBroadcast::findOrFail($id);
+        $b = WhatsappBroadcast::findOrFail($id);
         $b->status = 'scheduled'; $b->save();
         return ['resumed'=>true];
     }

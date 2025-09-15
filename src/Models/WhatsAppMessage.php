@@ -4,7 +4,7 @@ namespace ESolution\WhatsApp\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class WhatsAppMessage extends Model
+class WhatsappMessage extends Model
 {
     protected $fillable = [
         'whatsapp_account_id','to','type','payload','wa_message_id','status',

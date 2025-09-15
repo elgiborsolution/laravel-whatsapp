@@ -3,7 +3,7 @@
 namespace ESolution\WhatsApp\Console\Commands;
 
 use Illuminate\Console\Command;
-use ESolution\WhatsApp\Models\{WhatsAppBroadcast, WhatsAppBroadcastRecipient};
+use ESolution\WhatsApp\Models\{WhatsappBroadcast, WhatsappBroadcastRecipient};
 use ESolution\WhatsApp\Jobs\SendBroadcastChunkJob;
 
 class BroadcastRunCommand extends Command
@@ -13,7 +13,7 @@ class BroadcastRunCommand extends Command
 
     public function handle(): int
     {
-        $query = WhatsAppBroadcast::query()
+        $query = WhatsappBroadcast::query()
             ->when($this->option('id'), fn($q,$id)=>$q->where('id',$id))
             ->whereIn('status', ['scheduled','running'])
             ->where(function($q){ $q->whereNull('scheduled_at')->orWhere('scheduled_at','<=', now()); });
@@ -22,7 +22,7 @@ class BroadcastRunCommand extends Command
         foreach ($query->cursor() as $b) {
             $b->status = 'running'; $b->save();
 
-            $pendings = WhatsAppBroadcastRecipient::where('whatsapp_broadcast_id',$b->id)
+            $pendings = WhatsappBroadcastRecipient::where('whatsapp_broadcast_id',$b->id)
                 ->whereIn('status', ['pending'])
                 ->pluck('id')
                 ->toArray();

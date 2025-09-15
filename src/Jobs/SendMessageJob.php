@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use ESolution\WhatsApp\Models\{WhatsAppMessage, WhatsAppAccount, WhatsAppBroadcastRecipient};
+use ESolution\WhatsApp\Models\{WhatsAppMessage, WhatsappAccount, WhatsappBroadcastRecipient};
 use ESolution\WhatsApp\Services\WhatsAppService;
 
 class SendMessageJob implements ShouldQueue
@@ -24,7 +24,7 @@ class SendMessageJob implements ShouldQueue
         $msg = WhatsAppMessage::find($this->messageId);
         if (!$msg) return;
 
-        $acc = WhatsAppAccount::resolve($msg->whatsapp_account_id);
+        $acc = WhatsappAccount::resolve($msg->whatsapp_account_id);
         $payload = $msg->payload;
         $to = $msg->to;
 
@@ -44,7 +44,7 @@ class SendMessageJob implements ShouldQueue
         $msg->save();
 
         if ($waId) {
-            WhatsAppBroadcastRecipient::where('whatsapp_broadcast_id', $payload['broadcast_id'] ?? 0)
+            WhatsappBroadcastRecipient::where('whatsapp_broadcast_id', $payload['broadcast_id'] ?? 0)
                 ->where('to', $msg->to)
                 ->update(['wa_message_id'=>$waId,'status'=>'sent','sent_at'=>now()]);
         }

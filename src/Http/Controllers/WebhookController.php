@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use ESolution\WhatsApp\Models\{
     WhatsAppMessage,
-    WhatsAppBroadcastRecipient
+    WhatsappBroadcastRecipient
 };
 
 class WebhookController extends Controller
@@ -81,7 +81,7 @@ class WebhookController extends Controller
                 $m->save();
 
                 // If part of a broadcast
-                WhatsAppBroadcastRecipient::where('wa_message_id', $waId)->update([
+                WhatsappBroadcastRecipient::where('wa_message_id', $waId)->update([
                     'status'        => $status,
                     'sent_at'       => $m->sent_at,
                     'delivered_at'  => $m->delivered_at,

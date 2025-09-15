@@ -4,7 +4,7 @@ namespace ESolution\WhatsApp\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class WhatsAppAccount extends Model
+class WhatsappAccount extends Model
 {
     protected $fillable = ['name','waba_id','phone_number_id','access_token','is_default','meta'];
     protected $casts = ['meta' => 'array', 'is_default' => 'boolean'];
