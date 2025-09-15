@@ -175,10 +175,25 @@ Broadcasts will be dispatched in chunks using `SendBroadcastChunkJob` with respe
 - **URL**: `/whatsapp/webhook`
 - **Verify**: Meta calls `GET /webhook?hub_mode=subscribe&hub_verify_token=xxx&hub_challenge=1234`
 - **Status**: Meta sends `POST` updates with message status (`sent`, `delivered`, `read`, `failed`).
+- **Call Permission**: Meta sends `POST` updates with call_permission_reply status (`accept`, `reject`).
 
 Statuses are saved to:
 - `whatsapp_messages`
 - `whatsapp_broadcast_recipients`
+
+Call permission are broadcast through event: 
+`whatsapp.call_permission.updated`
+
+You need to create your own event listener and register it at EventServiceProvider
+```bash
+// app/Providers/EventServiceProvider.php
+protected $listen = [
+  'whatsapp.call_permission.updated' => [
+    \App\Listeners\HandleCallPermissionUpdated::class,
+  ],
+];
+```
+
 
 ---
 
