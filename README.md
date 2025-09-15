@@ -15,7 +15,7 @@ Laravel package for integrating **Meta WhatsApp Business Cloud API**, providing:
 
 1. Install:
 ```bash
-composer require elgibor-solution/laravel-whatsapp-cloud:*
+composer require elgibor-solution/laravel-whatsapp-meta:*
 ```
 
 3. Publish config & migrations:
@@ -71,7 +71,7 @@ All endpoints are available with prefix `/whatsapp/*`:
 
 ```php
 use WhatsApp;
-use Esolution\WhatsApp\Models\WhatsappAccount;
+use ESolution\WhatsApp\Models\WhatsappAccount;
 
 $acc = WhatsappAccount::resolve();
 

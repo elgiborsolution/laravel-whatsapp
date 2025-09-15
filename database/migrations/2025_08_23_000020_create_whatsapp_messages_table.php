@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('whatsapp_messages', function (Blueprint $t) {
             $t->id();
-            $t->foreignId('whatsapp_account_id')->constrained('whatsapp_accounts')->cascadeOnDelete();
+            $t->foreignId('whatsapp_account_id')->nullable()->constrained('whatsapp_accounts')->cascadeOnDelete();
             $t->string('to')->index();
             $t->string('type')->index();
             $t->json('payload');

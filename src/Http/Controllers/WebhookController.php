@@ -76,7 +76,7 @@ class WebhookController extends Controller
                     $err = $st['errors'][0] ?? [];
                     $m->error_code    = $err['code']   ?? null;
                     $m->error_title   = $err['title']  ?? null;
-                    $m->error_details = $err['details']?? null;
+                    $m->error_details = $err['details'] ?? null;
                 }
                 $m->save();
 
@@ -126,16 +126,18 @@ class WebhookController extends Controller
                 $templateName = data_get($msg, 'context.metadata.template.name'); // only if you store this on send
 
                 // Dispatch a simple string event for your app to handle DB updates
-                event('whatsapp.call_permission.updated', [
-                    'from'               => $from,
-                    'status'             => $decision['status'], // 'approved' | 'declined'
-                    'expires_at'         => $decision['expires_at'], // Carbon|null
-                    'response_source'    => $decision['response_source'], // 'user_action'|'automatic'|null
-                    'raw'                => $msg,
-                    'phone_number_id'    => $metadataPhoneId,
+                $payload = [
+                    'from' => $from,
+                    'status' => $decision['status'],
+                    'expires_at' => $decision['expires_at'],
+                    'response_source' => $decision['response_source'],
+                    'raw' => $msg,
+                    'phone_number_id' => $metadataPhoneId,
                     'context_message_id' => $contextMessageId,
-                    'template_name'      => $templateName,
-                ]);
+                    'template_name' => $templateName,
+                ];
+
+                event('whatsapp.call_permission.updated', [$payload]);
 
                 Log::info('[WA] Call permission decision', [
                     'from'            => $from,
@@ -144,7 +146,6 @@ class WebhookController extends Controller
                     'response_source' => $decision['response_source'],
                     'phone_number_id' => $metadataPhoneId,
                 ]);
-
             }
         }
     }
@@ -172,7 +173,7 @@ class WebhookController extends Controller
             $expTs    = data_get($msg, 'interactive.call_permission_reply.expiration_timestamp');
             $source   = data_get($msg, 'interactive.call_permission_reply.response_source'); // user_action | automatic
             $result['status'] = 'declined';
-            
+
             if ($response === 'accept' || $response === 'approved' || $response === 'allow') {
                 $result['status'] = 'approved';
             }
