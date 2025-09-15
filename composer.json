@@ -1,7 +1,6 @@
 {
   "name": "elgibor-solution/laravel-whatsapp-meta",
   "description": "Laravel package for Meta WhatsApp Business Cloud API: templates CRUD, sending messages, multi-account, broadcasts, webhooks.",
-  "version": "1.0.0",
   "type": "library",
   "license": "Apache-2.0",
   "autoload": {
@@ -20,9 +19,9 @@
     }
   },
   "require": {
-    "php": ">=8.1",
-    "illuminate/support": "^10.0|^11.0",
-    "illuminate/http": "^10.0|^11.0",
-    "illuminate/queue": "^10.0|^11.0"
+    "php": ">=8.2",
+    "illuminate/support": "^10.0|^11.0|^12.0",
+    "illuminate/http": "^10.0|^11.0|^12.0",
+    "illuminate/queue": "^10.0|^11.0|^12.0"
   }
 }
