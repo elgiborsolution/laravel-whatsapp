@@ -11,9 +11,11 @@ use ESolution\WhatsApp\Models\{
     WhatsAppMessage,
     WhatsappBroadcastRecipient
 };
+use ESolution\WhatsApp\Traits\NormalizesPhoneNumbers;
 
 class WebhookController extends Controller
 {
+    use NormalizesPhoneNumbers;
     /**
      * GET verification endpoint used by Meta (hub.challenge)
      */
@@ -189,18 +191,5 @@ class WebhookController extends Controller
         }
 
         return $result;
-    }
-
-    /**
-     * Very simple normalizer for MSISDN, adjust as needed.
-     * - remove non-digits
-     * - leading 0 => replace with 62
-     */
-    protected function normalizePhone(?string $num): string
-    {
-        $n = preg_replace('/\D+/', '', (string)$num);
-        if ($n === '') return $n;
-        if (Str::startsWith($n, '0')) $n = '62' . substr($n, 1);
-        return $n;
     }
 }
