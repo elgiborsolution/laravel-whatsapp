@@ -9,6 +9,12 @@ class AssetService
 {
     public function __construct(protected array $config) {}
 
+    protected function baseUrl(string $path = ''): string
+    {
+        $base = rtrim($this->config['base_url'] ?? 'https://graph.facebook.com/v23.0', '/');
+        return $path ? "{$base}/" . ltrim($path, '/') : $base;
+    }
+
     protected function client(WhatsappAccount $acc)
     {
         return Http::withToken($acc->access_token)
@@ -22,7 +28,7 @@ class AssetService
      */
     public function listPhoneNumbers(WhatsappAccount $acc): array
     {
-        $url = "https://graph.facebook.com/v23.0/{$acc->waba_id}/phone_numbers";
+        $url = $this->baseUrl("{$acc->waba_id}/phone_numbers");
         $res = $this->client($acc)->get($url);
 
         if (!$res->successful()) {
@@ -37,7 +43,7 @@ class AssetService
      */
     public function getPhoneNumber(WhatsappAccount $acc, string $phoneNumberId): array
     {
-        $url = "https://graph.facebook.com/v23.0/{$phoneNumberId}";
+        $url = $this->baseUrl($phoneNumberId);
         $res = $this->client($acc)->get($url);
 
         if (!$res->successful()) {
@@ -52,7 +58,7 @@ class AssetService
      */
     public function registerPhoneNumber(WhatsappAccount $acc, string $phoneNumberId, string $pin): bool
     {
-        $url = "https://graph.facebook.com/v23.0/{$phoneNumberId}/register";
+        $url = $this->baseUrl("{$phoneNumberId}/register");
         $res = $this->client($acc)->post($url, [
             'messaging_product' => 'whatsapp',
             'pin' => $pin,
@@ -66,7 +72,7 @@ class AssetService
      */
     public function verifyPhoneNumber(WhatsappAccount $acc, string $phoneNumberId, string $code): bool
     {
-        $url = "https://graph.facebook.com/v23.0/{$phoneNumberId}/verify";
+        $url = $this->baseUrl("{$phoneNumberId}/verify");
         $res = $this->client($acc)->post($url, [
             'code' => $code,
         ]);

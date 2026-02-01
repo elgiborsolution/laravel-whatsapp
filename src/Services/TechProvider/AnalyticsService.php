@@ -9,6 +9,12 @@ class AnalyticsService
 {
     public function __construct(protected array $config) {}
 
+    protected function baseUrl(string $path = ''): string
+    {
+        $base = rtrim($this->config['base_url'] ?? 'https://graph.facebook.com/v23.0', '/');
+        return $path ? "{$base}/" . ltrim($path, '/') : $base;
+    }
+
     protected function client(WhatsappAccount $acc)
     {
         return Http::withToken($acc->access_token)
@@ -22,7 +28,7 @@ class AnalyticsService
      */
     public function getWabaAnalytics(WhatsappAccount $acc, string $granularity = 'DAY', ?string $start = null, ?string $end = null): array
     {
-        $url = "https://graph.facebook.com/v23.0/{$acc->waba_id}/messaging_product_metrics";
+        $url = $this->baseUrl("{$acc->waba_id}/messaging_product_metrics");
         // Note: The endpoint might vary slightly based on exact metric needed (e.g., conversation_analytics).
 
         $res = $this->client($acc)->get($url, array_filter([
@@ -43,7 +49,7 @@ class AnalyticsService
      */
     public function getPhoneNumberHealth(WhatsappAccount $acc, string $phoneNumberId): array
     {
-        $url = "https://graph.facebook.com/v23.0/{$phoneNumberId}";
+        $url = $this->baseUrl($phoneNumberId);
         $res = $this->client($acc)->get($url, [
             'fields' => 'quality_rating,status,code_verification_status'
         ]);

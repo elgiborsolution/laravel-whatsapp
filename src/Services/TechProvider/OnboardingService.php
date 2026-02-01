@@ -9,6 +9,12 @@ class OnboardingService
 {
     public function __construct(protected array $config) {}
 
+    protected function baseUrl(string $path = ''): string
+    {
+        $base = rtrim($this->config['base_url'] ?? 'https://graph.facebook.com/v23.0', '/');
+        return $path ? "{$base}/" . ltrim($path, '/') : $base;
+    }
+
     protected function client(string $accessToken)
     {
         return Http::withToken($accessToken)
@@ -23,7 +29,7 @@ class OnboardingService
      */
     public function getLongLivedToken(string $shortLivedToken): array
     {
-        $res = Http::get("https://graph.facebook.com/v23.0/oauth/access_token", [
+        $res = Http::get($this->baseUrl("oauth/access_token"), [
             'grant_type' => 'fb_exchange_token',
             'client_id' => $this->config['client_id'] ?? null,
             'client_secret' => $this->config['client_secret'] ?? null,
@@ -42,7 +48,7 @@ class OnboardingService
      */
     public function getSharedWaba(string $accessToken): array
     {
-        $res = $this->client($accessToken)->get("https://graph.facebook.com/v23.0/debug_token", [
+        $res = $this->client($accessToken)->get($this->baseUrl("debug_token"), [
             'input_token' => $accessToken,
         ]);
 
