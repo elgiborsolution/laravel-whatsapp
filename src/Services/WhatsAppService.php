@@ -110,6 +110,20 @@ class WhatsAppService
         }
         return $res->json();
     }
+  
+    public function sendReaction(WhatsappAccount $acc, string $to, string $messageId, string $emoji): array
+    {
+        $payload = [
+            'messaging_product' => 'whatsapp',
+            'to' => $this->normalizePhone($to),
+            'type' => 'reaction',
+            'reaction' => [
+                'message_id' => $messageId,
+                'emoji' => $emoji,
+            ],
+        ];
+        return $this->sendRaw($acc, $payload);
+    }
 
     public function listTemplates(WhatsappAccount $acc, int $limit = 100, ?string $after = null): array
     {
