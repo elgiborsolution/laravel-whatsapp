@@ -96,6 +96,21 @@ class WhatsAppService
         return $this->sendRaw($acc, $payload);
     }
 
+    public function markAsRead(WhatsappAccount $acc, string $messageId): array
+    {
+        $payload = [
+            'messaging_product' => 'whatsapp',
+            'status' => 'read',
+            'message_id' => $messageId,
+        ];
+
+        $res = $this->client($acc)->post($this->endpoint($acc, 'messages'), $payload);
+        if (!$res->successful()) {
+            throw new \RuntimeException('WA markAsRead failed: '.$res->body());
+        }
+        return $res->json();
+    }
+  
     public function sendReaction(WhatsappAccount $acc, string $to, string $messageId, string $emoji): array
     {
         $payload = [
