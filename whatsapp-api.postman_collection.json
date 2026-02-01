@@ -1,0 +1,235 @@
+{
+	"info": {
+		"_postman_id": "3c081234-5678-4abc-9def-123456789012",
+		"name": "WhatsApp Cloud API - Laravel",
+		"description": "Comprehensive Postman collection for the Laravel WhatsApp Cloud API package.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Webhooks",
+			"item": [
+				{
+					"name": "Verify Webhook",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/webhook?hub.mode=subscribe&hub.verify_token={{webhook_token}}&hub.challenge=1234",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"webhook"
+							],
+							"query": [
+								{ "key": "hub.mode", "value": "subscribe" },
+								{ "key": "hub.verify_token", "value": "{{webhook_token}}" },
+								{ "key": "hub.challenge", "value": "1234" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Handle Webhook (Simulate)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": []\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/webhook",
+							"host": ["{{base_url}}"],
+							"path": ["webhook"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Templates",
+			"item": [
+				{
+					"name": "List Templates",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{base_url}}/templates", "host": ["{{base_url}}"], "path": ["templates"] }
+					}
+				},
+				{
+					"name": "Create Template",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"promo_aug\",\n  \"category\": \"MARKETING\",\n  \"language\": \"en\",\n  \"components\": [\n    { \"type\": \"BODY\", \"text\": \"Hello {{1}}, August promo!\" }\n  ]\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/templates", "host": ["{{base_url}}"], "path": ["templates"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "Messages",
+			"item": [
+				{
+					"name": "Send Message",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"to\": \"628123456789\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"Hello World\" }\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/messages/send", "host": ["{{base_url}}"], "path": ["messages", "send"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "Tech Provider",
+			"item": [
+				{
+					"name": "Assets",
+					"item": [
+						{
+							"name": "List Phone Numbers",
+							"request": {
+								"method": "GET",
+								"url": "{{base_url}}/accounts/{{account_id}}/phone-numbers"
+							}
+						},
+						{
+							"name": "Get Phone Number",
+							"request": {
+								"method": "GET",
+								"url": "{{base_url}}/accounts/{{account_id}}/phone-numbers/{{phone_id}}"
+							}
+						}
+					]
+				},
+				{
+					"name": "Flows",
+					"item": [
+						{
+							"name": "List Flows",
+							"request": {
+								"method": "GET",
+								"url": "{{base_url}}/accounts/{{account_id}}/flows"
+							}
+						},
+						{
+							"name": "Create Flow",
+							"request": {
+								"method": "POST",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Registration Flow\",\n  \"categories\": [\"SURVEY\"]\n}",
+									"options": { "raw": { "language": "json" } }
+								},
+								"url": "{{base_url}}/accounts/{{account_id}}/flows"
+							}
+						}
+					]
+				},
+				{
+					"name": "Media",
+					"item": [
+						{
+							"name": "Upload Media",
+							"request": {
+								"method": "POST",
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{ "key": "file", "type": "file", "src": [] },
+										{ "key": "type", "value": "image", "type": "text" }
+									]
+								},
+								"url": "{{base_url}}/accounts/{{account_id}}/media"
+							}
+						}
+					]
+				},
+				{
+					"name": "Onboarding",
+					"item": [
+						{
+							"name": "Exchange Token",
+							"request": {
+								"method": "POST",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"short_lived_token\": \"your_short_lived_token\"\n}",
+									"options": { "raw": { "language": "json" } }
+								},
+								"url": "{{base_url}}/onboarding/exchange-token"
+							}
+						}
+					]
+				},
+				{
+					"name": "Analytics",
+					"item": [
+						{
+							"name": "WABA Metrics",
+							"request": {
+								"method": "GET",
+								"url": {
+									"raw": "{{base_url}}/accounts/{{account_id}}/analytics?granularity=DAY",
+									"host": ["{{base_url}}"],
+									"path": ["accounts", "{{account_id}}", "analytics"],
+									"query": [ { "key": "granularity", "value": "DAY" } ]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Inbound Tokens",
+			"item": [
+				{
+					"name": "Create Token",
+					"request": {
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phone\": \"628123456789\",\n  \"type\": \"otp\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": "{{base_url}}/tokens"
+					}
+				},
+				{
+					"name": "Consume Token",
+					"request": {
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phone\": \"628123456789\",\n  \"text\": \"My code is ABC123\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": "{{base_url}}/tokens/consume"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{ "key": "base_url", "value": "http://your-app.test/whatsapp" },
+		{ "key": "webhook_token", "value": "change-me" },
+		{ "key": "account_id", "value": "1" },
+		{ "key": "phone_id", "value": "your_phone_number_id" },
+		{ "key": "flow_id", "value": "your_flow_id" },
+		{ "key": "media_id", "value": "your_media_id" }
+	]
+}

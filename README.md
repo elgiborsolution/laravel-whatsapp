@@ -242,52 +242,55 @@ Broadcasts will be dispatched in chunks using `SendBroadcastChunkJob` with respe
 
 ## 🚀 Tech Provider (Partner) Services
 
-For Meta Tech Providers, this package provides specialized services for managing client accounts at scale.
+For Meta Tech Providers, this package provides specialized services and **API endpoints** for managing client accounts at scale.
 
-### Onboarding
+### 🌐 API Endpoints
 
-```php
-use ESolution\WhatsApp\Services\TechProvider\OnboardingService;
+All routes are prefixed with `/whatsapp/` (customizable in config).
 
-$onboarding = app(OnboardingService::class);
-$token = $onboarding->getLongLivedToken($shortLivedToken);
-$waba = $onboarding->getSharedWaba($token['access_token']);
-```
+#### 📱 Asset Management (Phone Numbers)
 
-### Asset & Profile Management
+- `GET /accounts/{acc_id}/phone-numbers` – List phone numbers for WABA.
+- `GET /accounts/{acc_id}/phone-numbers/{phone_id}` – Get details.
+- `POST /accounts/{acc_id}/phone-numbers/{phone_id}/register` – Register for Cloud API.
+- `POST /accounts/{acc_id}/phone-numbers/{phone_id}/verify` – Verify with SMS code.
 
-```php
-use ESolution\WhatsApp\Services\TechProvider\AssetService;
-use ESolution\WhatsApp\Services\TechProvider\ProfileService;
+#### 🌊 WhatsApp Flows
 
-$asset = app(AssetService::class);
-$profile = app(ProfileService::class);
+- `GET /accounts/{acc_id}/flows` – List all flows.
+- `POST /accounts/{acc_id}/flows` – Create new flow.
+- `POST /accounts/{acc_id}/flows/{flow_id}/assets` – Upload JSON asset.
+- `POST /accounts/{acc_id}/flows/{flow_id}/publish` – Publish flow.
 
-// Register phone number
-$asset->registerPhoneNumber($acc, $phoneId, '123456');
+#### 📁 Media Management
 
-// Update business profile
-$profile->updateProfile($acc, $phoneId, [
-    'about' => 'High quality service',
-    'email' => 'support@example.com'
-]);
-```
+- `POST /accounts/{acc_id}/media` – Upload media (multipart/form-data).
+- `GET /accounts/{acc_id}/media/{media_id}` – Get metadata.
+- `DELETE /accounts/{acc_id}/media/{media_id}` – Delete media.
 
-### Media & Flows
+#### 🤝 Onboarding
 
-```php
-use ESolution\WhatsApp\Services\TechProvider\MediaService;
-use ESolution\WhatsApp\Services\TechProvider\FlowsService;
+- `POST /onboarding/exchange-token` – Exchange short-lived FB token.
+- `POST /onboarding/debug-token` – Get WABA/token info.
 
-$media = app(MediaService::class);
-$flows = app(FlowsService::class);
+#### 👤 Business Profile
 
-// Upload media
-$res = $media->upload($acc, '/path/to/file.jpg', 'image');
+- `GET /accounts/{acc_id}/profile/{phone_id}` – Get profile.
+- `POST /accounts/{acc_id}/profile/{phone_id}` – Update profile fields.
 
-// Create Flow
-$flow = $flows->createFlow($acc, 'Registration Flow', ['SURVEY']);
-```
+#### 📊 Analytics & Health
+
+- `GET /accounts/{acc_id}/analytics` – WABA messaging metrics.
+- `GET /accounts/{acc_id}/phone-numbers/{phone_id}/health` – Quality rating & status.
+
+---
+
+## 🔑 Inbound Tokens (OTP / Vouchers)
+
+### 🌐 API Endpoints
+
+- `POST /whatsapp/tokens` – Create a token.
+- `POST /whatsapp/tokens/consume` – Manually verify token from string.
 
 ---
 
