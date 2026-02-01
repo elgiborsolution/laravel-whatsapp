@@ -287,6 +287,30 @@ protected $listen = [
 
 ---
 
+## 🧪 Testing
+
+The package uses **Orchestra Testbench** for comprehensive testing.
+
+1. Install dev dependencies:
+
+```bash
+composer install
+```
+
+2. Run tests:
+
+```bash
+./vendor/bin/phpunit
+```
+
+Test coverage includes:
+
+- **Unit**: Component logic and traits.
+- **Integration**: Database models and migrations.
+- **Feature**: Webhook routes and payload processing.
+
+---
+
 ## Support & Hiring
 
 Need professional help or want to move faster? **Hire the E-Solution / Elgibor team** for integration, audits, or custom features.  

@@ -1,28 +1,25 @@
-# Finish: WhatsApp Inbound Token Feature
+# Finish: Testing Suite for laravel-whatsapp
 
 ## Summary of Changes
-- **Database**: Created migration for `whatsapp_tokens` table.
-- **Model**: Added `WhatsappToken` model with `active` scope and verification helper.
-- **Service**: 
-    - Implemented `createToken` with support for Alphanumeric, Numeric, and UUID formats.
-    - Implemented `consumeToken` for substring matching in mixed-text messages.
-    - Integrated event firing mechanism.
-- **Webhook**: Updated `WebhookController` to automatically check for tokens in all incoming text messages.
-- **Documentation**: Updated `README.md` with detailed usage guidance and examples.
+- **Dependencies**: Updated `composer.json` with `phpunit`, `testbench`, and `mockery`.
+- **Infrastructure**: Created `tests/TestCase.php` and `phpunit.xml`.
+- **Tests**:
+    - **Unit**: `NormalizationTest`, `TokenGenerationTest`.
+    - **Integration**: `TokenServiceTest`.
+    - **Feature**: `WebhookTest`.
+- **Documentation**: Added a "Testing" section to `README.md`.
 
 ## Verification Results
-- **Step 1 (Migration)**: PASS
-- **Step 2 (Model)**: PASS
-- **Step 3 & 4 (Service)**: PASS
-- **Step 5 (Webhook)**: PASS
-- **Step 6 (README)**: PASS
+- **composer.json update**: PASS
+- **Infrastructure setup**: PASS
+- **Test file creation**: PASS
+- **README documentation**: PASS
 
-## Follow-up Actions
-1. **Migrations**: The user needs to run `php artisan migrate` to create the new table.
-2. **Event Listeners**: The user should implement listeners for `whatsapp.token.verified` or specific types like `whatsapp.token.verified.otp`.
+## Instructions for User
+To run the tests:
+1. Run `composer install` to download the new testing dependencies.
+2. Run `./vendor/bin/phpunit` to execute all tests.
 
-## Manual Validation Steps
-1. Run `php artisan migrate`.
-2. Generate a token: `WhatsApp::createToken('your_phone', 'otp', [], ['length' => 6])`.
-3. Simulate a webhook message via Postman containing that token.
-4. Verify the `verified_at` column in the database.
+## Rollback Plan
+- Revert `composer.json`.
+- Delete the `tests/` directory and `phpunit.xml`.
