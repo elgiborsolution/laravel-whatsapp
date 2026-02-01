@@ -9,6 +9,12 @@ class MediaService
 {
     public function __construct(protected array $config) {}
 
+    protected function baseUrl(string $path = ''): string
+    {
+        $base = rtrim($this->config['base_url'] ?? 'https://graph.facebook.com/v23.0', '/');
+        return $path ? "{$base}/" . ltrim($path, '/') : $base;
+    }
+
     protected function client(WhatsappAccount $acc)
     {
         return Http::withToken($acc->access_token)
@@ -22,7 +28,7 @@ class MediaService
      */
     public function upload(WhatsappAccount $acc, string $filePath, string $type): array
     {
-        $url = "https://graph.facebook.com/v23.0/{$acc->phone_number_id}/media";
+        $url = $this->baseUrl("{$acc->phone_number_id}/media");
 
         $res = Http::withToken($acc->access_token)
             ->attach('file', file_get_contents($filePath), basename($filePath))
@@ -43,7 +49,7 @@ class MediaService
      */
     public function getMedia(WhatsappAccount $acc, string $mediaId): array
     {
-        $url = "https://graph.facebook.com/v23.0/{$mediaId}";
+        $url = $this->baseUrl($mediaId);
         $res = $this->client($acc)->get($url);
 
         if (!$res->successful()) {
@@ -58,7 +64,7 @@ class MediaService
      */
     public function deleteMedia(WhatsappAccount $acc, string $mediaId): bool
     {
-        $url = "https://graph.facebook.com/v23.0/{$mediaId}";
+        $url = $this->baseUrl($mediaId);
         $res = $this->client($acc)->delete($url);
 
         return $res->successful();

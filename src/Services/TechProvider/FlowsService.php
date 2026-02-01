@@ -9,6 +9,12 @@ class FlowsService
 {
     public function __construct(protected array $config) {}
 
+    protected function baseUrl(string $path = ''): string
+    {
+        $base = rtrim($this->config['base_url'] ?? 'https://graph.facebook.com/v23.0', '/');
+        return $path ? "{$base}/" . ltrim($path, '/') : $base;
+    }
+
     protected function client(WhatsappAccount $acc)
     {
         return Http::withToken($acc->access_token)
@@ -22,7 +28,7 @@ class FlowsService
      */
     public function createFlow(WhatsappAccount $acc, string $name, array $categories): array
     {
-        $url = "https://graph.facebook.com/v23.0/{$acc->waba_id}/flows";
+        $url = $this->baseUrl("{$acc->waba_id}/flows");
         $res = $this->client($acc)->post($url, [
             'name' => $name,
             'categories' => $categories,
@@ -40,7 +46,7 @@ class FlowsService
      */
     public function updateFlowAsset(WhatsappAccount $acc, string $flowId, string $jsonPath): bool
     {
-        $url = "https://graph.facebook.com/v23.0/{$flowId}/assets";
+        $url = $this->baseUrl("{$flowId}/assets");
 
         $res = Http::withToken($acc->access_token)
             ->attach('file', file_get_contents($jsonPath), 'flow.json')
@@ -57,7 +63,7 @@ class FlowsService
      */
     public function publishFlow(WhatsappAccount $acc, string $flowId): bool
     {
-        $url = "https://graph.facebook.com/v23.0/{$flowId}/publish";
+        $url = $this->baseUrl("{$flowId}/publish");
         $res = $this->client($acc)->post($url);
 
         return $res->successful();
@@ -68,7 +74,7 @@ class FlowsService
      */
     public function listFlows(WhatsappAccount $acc): array
     {
-        $url = "https://graph.facebook.com/v23.0/{$acc->waba_id}/flows";
+        $url = $this->baseUrl("{$acc->waba_id}/flows");
         $res = $this->client($acc)->get($url);
 
         if (!$res->successful()) {

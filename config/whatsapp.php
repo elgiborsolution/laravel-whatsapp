@@ -15,8 +15,8 @@ return [
     ],
 
     'broadcast' => [
-        'chunk_size' => env('WHATSAPP_BROADCAST_CHUNK', 1000),
-        'rate_per_min' => env('WHATSAPP_BROADCAST_RPM', 3000),
+        'chunk_size' => env('WHATSAPP_BROADCAST_CHUNK', 100),
+        'rate_per_min' => env('WHATSAPP_BROADCAST_RPM', 60),
         'max_retries' => 3,
         'retry_delay_seconds' => 30,
     ],

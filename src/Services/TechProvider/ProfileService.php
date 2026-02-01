@@ -9,6 +9,12 @@ class ProfileService
 {
     public function __construct(protected array $config) {}
 
+    protected function baseUrl(string $path = ''): string
+    {
+        $base = rtrim($this->config['base_url'] ?? 'https://graph.facebook.com/v23.0', '/');
+        return $path ? "{$base}/" . ltrim($path, '/') : $base;
+    }
+
     protected function client(WhatsappAccount $acc)
     {
         return Http::withToken($acc->access_token)
@@ -22,7 +28,7 @@ class ProfileService
      */
     public function getProfile(WhatsappAccount $acc, string $phoneNumberId): array
     {
-        $url = "https://graph.facebook.com/v23.0/{$phoneNumberId}/whatsapp_business_profile";
+        $url = $this->baseUrl("{$phoneNumberId}/whatsapp_business_profile");
         $res = $this->client($acc)->get($url);
 
         if (!$res->successful()) {
@@ -37,7 +43,7 @@ class ProfileService
      */
     public function updateProfile(WhatsappAccount $acc, string $phoneNumberId, array $data): bool
     {
-        $url = "https://graph.facebook.com/v23.0/{$phoneNumberId}/whatsapp_business_profile";
+        $url = $this->baseUrl("{$phoneNumberId}/whatsapp_business_profile");
         $res = $this->client($acc)->post($url, array_merge($data, [
             'messaging_product' => 'whatsapp',
         ]));
