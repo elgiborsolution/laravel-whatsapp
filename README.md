@@ -7,6 +7,7 @@ Laravel package for integrating **Meta WhatsApp Business Cloud API**, providing:
 - **Multi-account support** (auto-pick default if only one)
 - **Broadcast** to millions of recipients (chunking, scheduling, job queue)
 - **Webhook** to update message status (sent, delivered, read, failed)
+- **Inbound Tokens** for OTP, Vouchers, and mixed-message parsing
 - **Queue + Retry** for reliability
 
 ---
@@ -14,11 +15,13 @@ Laravel package for integrating **Meta WhatsApp Business Cloud API**, providing:
 ## 🚀 Installation
 
 1. Install:
+
 ```bash
 composer require elgibor-solution/laravel-whatsapp-meta:*
 ```
 
 3. Publish config & migrations:
+
 ```bash
 php artisan vendor:publish --tag=whatsapp-config
 php artisan vendor:publish --tag=whatsapp-migrations
@@ -26,6 +29,7 @@ php artisan migrate
 ```
 
 4. Add to **scheduler**:
+
 ```php
 // routes/console.php
 $schedule->command('whatsapp:broadcast-run')->everyMinute();
@@ -47,7 +51,9 @@ WHATSAPP_WEBHOOK_VERIFY_TOKEN=change-me
 ```
 
 ### Multi Account
+
 If multiple accounts are needed:
+
 - Insert rows into `whatsapp_accounts` table (migration provided).
 - Mark one with `is_default = 1` as the default account.
 
@@ -112,6 +118,67 @@ WhatsApp::sendInteractive($acc, '08123456789', [
 
 ---
 
+## 🔑 Inbound Tokens (OTP / Vouchers)
+
+Allow users to verify or claim items by sending a unique code back to your WhatsApp Business Number. The system automatically searches for these tokens even if they are buried within a longer message.
+
+### 1. Create a Token
+
+```php
+use ESolution\WhatsApp\Facades\WhatsApp;
+
+// Generate an 8-character alphanumeric code (default)
+$token = WhatsApp::createToken('08123456789', 'otp');
+
+// Generate a 10% discount voucher valid for 1 hour
+$voucher = WhatsApp::createToken('08123456789', 'voucher', [
+    'discount' => '10%',
+    'campaign' => 'black_friday'
+], [
+    'expires_in' => 60,
+    'length' => 12
+]);
+
+// Generate a secure UUID token
+$uuid = WhatsApp::createToken('08123456789', 'secure_claim', [], [
+    'format' => 'uuid'
+]);
+```
+
+### 2. Handle Verification
+
+When the user sends a message containing the token (e.g., "Hi, here is my code: ABC-123"), the package fires an event.
+
+**Register Listeners:**
+
+```php
+// app/Providers/EventServiceProvider.php
+protected $listen = [
+    'whatsapp.token.verified' => [
+        \App\Listeners\LogVerification::class,
+    ],
+    /** OR type-specific listener **/
+    'whatsapp.token.verified.voucher' => [
+        \App\Listeners\ApplyDiscount::class,
+    ],
+];
+```
+
+**Listener Example:**
+
+```php
+public function handle($token)
+{
+    // $token is an instance of ESolution\WhatsApp\Models\WhatsappToken
+    $phone = $token->phone;
+    $metadata = $token->metadata; // ['discount' => '10%', ...]
+
+    // Perform your logic here
+}
+```
+
+---
+
 ## 📜 Template CRUD
 
 ```php
@@ -137,6 +204,7 @@ WhatsApp::deleteTemplate($acc, 'promo_aug', 'en');
 ## 📢 Broadcast
 
 ### Create Broadcast
+
 ```json
 POST /whatsapp/broadcasts
 {
@@ -156,17 +224,70 @@ POST /whatsapp/broadcasts
 ```
 
 ### Schedule Broadcast
+
 ```json
 POST /whatsapp/broadcasts/1/schedule
 { "scheduled_at": "2025-08-24 22:00:00" }
 ```
 
 ### Run Scheduler
+
 ```bash
 php artisan schedule:run
 ```
 
 Broadcasts will be dispatched in chunks using `SendBroadcastChunkJob` with respect to `chunk_size` and `rate_per_min`.
+
+---
+
+## 🚀 Tech Provider (Partner) Services
+
+For Meta Tech Providers, this package provides specialized services for managing client accounts at scale.
+
+### Onboarding
+
+```php
+use ESolution\WhatsApp\Services\TechProvider\OnboardingService;
+
+$onboarding = app(OnboardingService::class);
+$token = $onboarding->getLongLivedToken($shortLivedToken);
+$waba = $onboarding->getSharedWaba($token['access_token']);
+```
+
+### Asset & Profile Management
+
+```php
+use ESolution\WhatsApp\Services\TechProvider\AssetService;
+use ESolution\WhatsApp\Services\TechProvider\ProfileService;
+
+$asset = app(AssetService::class);
+$profile = app(ProfileService::class);
+
+// Register phone number
+$asset->registerPhoneNumber($acc, $phoneId, '123456');
+
+// Update business profile
+$profile->updateProfile($acc, $phoneId, [
+    'about' => 'High quality service',
+    'email' => 'support@example.com'
+]);
+```
+
+### Media & Flows
+
+```php
+use ESolution\WhatsApp\Services\TechProvider\MediaService;
+use ESolution\WhatsApp\Services\TechProvider\FlowsService;
+
+$media = app(MediaService::class);
+$flows = app(FlowsService::class);
+
+// Upload media
+$res = $media->upload($acc, '/path/to/file.jpg', 'image');
+
+// Create Flow
+$flow = $flows->createFlow($acc, 'Registration Flow', ['SURVEY']);
+```
 
 ---
 
@@ -178,13 +299,15 @@ Broadcasts will be dispatched in chunks using `SendBroadcastChunkJob` with respe
 - **Call Permission**: Meta sends `POST` updates with call_permission_reply status (`accept`, `reject`).
 
 Statuses are saved to:
+
 - `whatsapp_messages`
 - `whatsapp_broadcast_recipients`
 
-Call permission are broadcast through event: 
+Call permission are broadcast through event:
 `whatsapp.call_permission.updated`
 
 You need to create your own event listener and register it at EventServiceProvider
+
 ```bash
 // app/Providers/EventServiceProvider.php
 protected $listen = [
@@ -193,7 +316,6 @@ protected $listen = [
   ],
 ];
 ```
-
 
 ---
 
@@ -213,6 +335,30 @@ protected $listen = [
 - Media must be **public URLs**.
 - Phone numbers are normalized: leading `0` → `62`. Adjust if needed.
 - Store and log Graph API responses for error analysis.
+
+---
+
+## 🧪 Testing
+
+The package uses **Orchestra Testbench** for comprehensive testing.
+
+1. Install dev dependencies:
+
+```bash
+composer install
+```
+
+2. Run tests:
+
+```bash
+./vendor/bin/phpunit
+```
+
+Test coverage includes:
+
+- **Unit**: Component logic and traits.
+- **Integration**: Database models and migrations.
+- **Feature**: Webhook routes and payload processing.
 
 ---
 

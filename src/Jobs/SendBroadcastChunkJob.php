@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use ESolution\WhatsApp\Models\{WhatsappBroadcast, WhatsappBroadcastRecipient, WhatsAppMessage, WhatsappAccount};
+use ESolution\WhatsApp\Models\{WhatsappBroadcast, WhatsappBroadcastRecipient, WhatsappMessage, WhatsappAccount};
 
 class SendBroadcastChunkJob implements ShouldQueue
 {
@@ -29,19 +29,20 @@ class SendBroadcastChunkJob implements ShouldQueue
 
         foreach (WhatsappBroadcastRecipient::whereIn('id', $this->recipientIds)->cursor() as $rec) {
             RateLimiter::attempt(
-                'wa-broadcast:'.$acc->phone_number_id,
+                'wa-broadcast:' . $acc->phone_number_id,
                 $rpm,
                 function () use ($b, $acc, $rec) {
-                    $msg = WhatsAppMessage::create([
+                    $msg = WhatsappMessage::create([
                         'whatsapp_account_id' => $acc->id ?: null,
                         'to'   => $rec->to,
                         'type' => $b->type,
-                        'payload' => array_merge($b->payload, ['broadcast_id'=>$b->id]),
+                        'payload' => array_merge($b->payload, ['broadcast_id' => $b->id]),
                         'status' => 'queued',
                     ]);
                     dispatch(new \ESolution\WhatsApp\Jobs\SendMessageJob($msg->id))
                         ->onConnection(config('whatsapp.queue'));
-                    $rec->status = 'queued'; $rec->save();
+                    $rec->status = 'queued';
+                    $rec->save();
                 },
                 60
             );

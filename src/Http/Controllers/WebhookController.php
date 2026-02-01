@@ -8,12 +8,17 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use ESolution\WhatsApp\Models\{
-    WhatsAppMessage,
+    WhatsappMessage,
     WhatsappBroadcastRecipient
 };
+use ESolution\WhatsApp\Traits\NormalizesPhoneNumbers;
+use ESolution\WhatsApp\Services\WhatsAppService;
 
 class WebhookController extends Controller
 {
+    use NormalizesPhoneNumbers;
+
+    public function __construct(protected WhatsAppService $whatsapp) {}
     /**
      * GET verification endpoint used by Meta (hub.challenge)
      */
@@ -65,7 +70,7 @@ class WebhookController extends Controller
 
             if (!$waId || !$status) continue;
 
-            $m = WhatsAppMessage::where('wa_message_id', $waId)->first();
+            $m = WhatsappMessage::where('wa_message_id', $waId)->first();
             if ($m) {
                 $m->status = $status;
                 if ($status === 'sent')      $m->sent_at      = $ts;
@@ -104,11 +109,11 @@ class WebhookController extends Controller
         $metadataPhoneId = data_get($rootValue, 'metadata.phone_number_id');
 
         foreach ($messages as $msg) {
-            // Persist inbound as WhatsAppMessage (optional but useful for audits)
+            // Persist inbound as WhatsappMessage (optional but useful for audits)
             $from = $this->normalizePhone($msg['from'] ?? '');
             $type = $msg['type'] ?? 'unknown';
 
-            $stored = new WhatsAppMessage();
+            $stored = new WhatsappMessage();
             $stored->whatsapp_account_id = null; // you can map by $metadataPhoneId to your accounts table if needed
             $stored->to            = $from; // inbound "from" becomes our "to" when replying
             $stored->type          = 'inbound:' . $type;
@@ -116,6 +121,14 @@ class WebhookController extends Controller
             $stored->wa_message_id = $msg['id'] ?? null;
             $stored->status        = 'received';
             $stored->save();
+
+            // Detect and consume tokens (OTP, Voucher, etc.)
+            if ($type === 'text') {
+                $text = data_get($msg, 'text.body');
+                if ($text) {
+                    $this->whatsapp->consumeToken($from, $text);
+                }
+            }
 
             // Detect call permission reply (supports call_permission_reply + fallback keywords/buttons)
             $decision = $this->detectCallPermissionDecision($msg);
@@ -189,18 +202,5 @@ class WebhookController extends Controller
         }
 
         return $result;
-    }
-
-    /**
-     * Very simple normalizer for MSISDN, adjust as needed.
-     * - remove non-digits
-     * - leading 0 => replace with 62
-     */
-    protected function normalizePhone(?string $num): string
-    {
-        $n = preg_replace('/\D+/', '', (string)$num);
-        if ($n === '') return $n;
-        if (Str::startsWith($n, '0')) $n = '62' . substr($n, 1);
-        return $n;
     }
 }
