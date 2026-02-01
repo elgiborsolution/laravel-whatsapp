@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use ESolution\WhatsApp\Models\{WhatsAppMessage, WhatsappAccount, WhatsappBroadcastRecipient};
+use ESolution\WhatsApp\Models\{WhatsappMessage, WhatsappAccount, WhatsappBroadcastRecipient};
 use ESolution\WhatsApp\Services\WhatsAppService;
 
 class SendMessageJob implements ShouldQueue
@@ -21,7 +21,7 @@ class SendMessageJob implements ShouldQueue
 
     public function handle(WhatsAppService $svc): void
     {
-        $msg = WhatsAppMessage::find($this->messageId);
+        $msg = WhatsappMessage::find($this->messageId);
         if (!$msg) return;
 
         $acc = WhatsappAccount::resolve($msg->whatsapp_account_id);
@@ -31,10 +31,10 @@ class SendMessageJob implements ShouldQueue
         $resp = match ($msg->type) {
             'text' => $svc->sendText($acc, $to, $payload['body'] ?? '', $payload['preview_url'] ?? null),
             'template' => $svc->sendTemplate($acc, $to, $payload['name'], $payload['language'] ?? 'en_US', $payload['components'] ?? []),
-            'image','audio','video','document' => $svc->sendMedia($acc, $to, $msg->type, $payload),
+            'image', 'audio', 'video', 'document' => $svc->sendMedia($acc, $to, $msg->type, $payload),
             'location' => $svc->sendLocation($acc, $to, (float)$payload['lat'], (float)$payload['lng'], $payload['name'] ?? null, $payload['address'] ?? null),
             'interactive' => $svc->sendInteractive($acc, $to, $payload),
-            default => throw new \InvalidArgumentException('Unsupported type '.$msg->type),
+            default => throw new \InvalidArgumentException('Unsupported type ' . $msg->type),
         };
 
         $waId = $resp['messages'][0]['id'] ?? null;
@@ -46,7 +46,7 @@ class SendMessageJob implements ShouldQueue
         if ($waId) {
             WhatsappBroadcastRecipient::where('whatsapp_broadcast_id', $payload['broadcast_id'] ?? 0)
                 ->where('to', $msg->to)
-                ->update(['wa_message_id'=>$waId,'status'=>'sent','sent_at'=>now()]);
+                ->update(['wa_message_id' => $waId, 'status' => 'sent', 'sent_at' => now()]);
         }
     }
 }

@@ -240,6 +240,57 @@ Broadcasts will be dispatched in chunks using `SendBroadcastChunkJob` with respe
 
 ---
 
+## 🚀 Tech Provider (Partner) Services
+
+For Meta Tech Providers, this package provides specialized services for managing client accounts at scale.
+
+### Onboarding
+
+```php
+use ESolution\WhatsApp\Services\TechProvider\OnboardingService;
+
+$onboarding = app(OnboardingService::class);
+$token = $onboarding->getLongLivedToken($shortLivedToken);
+$waba = $onboarding->getSharedWaba($token['access_token']);
+```
+
+### Asset & Profile Management
+
+```php
+use ESolution\WhatsApp\Services\TechProvider\AssetService;
+use ESolution\WhatsApp\Services\TechProvider\ProfileService;
+
+$asset = app(AssetService::class);
+$profile = app(ProfileService::class);
+
+// Register phone number
+$asset->registerPhoneNumber($acc, $phoneId, '123456');
+
+// Update business profile
+$profile->updateProfile($acc, $phoneId, [
+    'about' => 'High quality service',
+    'email' => 'support@example.com'
+]);
+```
+
+### Media & Flows
+
+```php
+use ESolution\WhatsApp\Services\TechProvider\MediaService;
+use ESolution\WhatsApp\Services\TechProvider\FlowsService;
+
+$media = app(MediaService::class);
+$flows = app(FlowsService::class);
+
+// Upload media
+$res = $media->upload($acc, '/path/to/file.jpg', 'image');
+
+// Create Flow
+$flow = $flows->createFlow($acc, 'Registration Flow', ['SURVEY']);
+```
+
+---
+
 ## 🔔 Webhook
 
 - **URL**: `/whatsapp/webhook`

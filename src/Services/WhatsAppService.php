@@ -2,7 +2,7 @@
 
 namespace ESolution\WhatsApp\Services;
 
-use ESolution\WhatsApp\Models\{WhatsappAccount, WhatsAppMessage, WhatsappToken};
+use ESolution\WhatsApp\Models\{WhatsappAccount, WhatsappMessage, WhatsappToken};
 use ESolution\WhatsApp\Traits\NormalizesPhoneNumbers;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
@@ -142,6 +142,14 @@ class WhatsAppService
     {
         $url = rtrim($this->config['base_url'], '/') . "/{$acc->waba_id}/message_templates";
         $res = $this->client($acc)->post($url, $data);
+        if (!$res->successful()) throw new \RuntimeException($res->body());
+        return $res->json();
+    }
+
+    public function getTemplate(WhatsappAccount $acc, string $templateId): array
+    {
+        $url = rtrim($this->config['base_url'], '/') . "/{$templateId}";
+        $res = $this->client($acc)->get($url);
         if (!$res->successful()) throw new \RuntimeException($res->body());
         return $res->json();
     }

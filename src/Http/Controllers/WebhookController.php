@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use ESolution\WhatsApp\Models\{
-    WhatsAppMessage,
+    WhatsappMessage,
     WhatsappBroadcastRecipient
 };
 use ESolution\WhatsApp\Traits\NormalizesPhoneNumbers;
@@ -70,7 +70,7 @@ class WebhookController extends Controller
 
             if (!$waId || !$status) continue;
 
-            $m = WhatsAppMessage::where('wa_message_id', $waId)->first();
+            $m = WhatsappMessage::where('wa_message_id', $waId)->first();
             if ($m) {
                 $m->status = $status;
                 if ($status === 'sent')      $m->sent_at      = $ts;
@@ -109,11 +109,11 @@ class WebhookController extends Controller
         $metadataPhoneId = data_get($rootValue, 'metadata.phone_number_id');
 
         foreach ($messages as $msg) {
-            // Persist inbound as WhatsAppMessage (optional but useful for audits)
+            // Persist inbound as WhatsappMessage (optional but useful for audits)
             $from = $this->normalizePhone($msg['from'] ?? '');
             $type = $msg['type'] ?? 'unknown';
 
-            $stored = new WhatsAppMessage();
+            $stored = new WhatsappMessage();
             $stored->whatsapp_account_id = null; // you can map by $metadataPhoneId to your accounts table if needed
             $stored->to            = $from; // inbound "from" becomes our "to" when replying
             $stored->type          = 'inbound:' . $type;

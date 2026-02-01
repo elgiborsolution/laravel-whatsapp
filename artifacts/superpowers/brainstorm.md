@@ -1,55 +1,51 @@
-# Brainstorm: Testing Strategy for laravel-whatsapp
-
 ## Goal
-Establish a robust testing suite for the package, covering unit tests for core logic (e.g., token parsing, normalization) and integration tests for Laravel-specific components (models, migrations, webhooks, services).
+
+Implement support for Meta Tech Provider registration and capability requirements in the `laravel-whatsapp` package. This includes streamlining customer onboarding via Embedded Signup, managing assets, registration, business profiles, media, flows, and analytics.
 
 ## Constraints
-- **Package Context**: Tests must run in isolation without a full Laravel app, requiring `orchestra/testbench`.
-- **API Mocking**: Must mock Meta Graph API responses to avoid real network calls.
-- **Environment**: Support PHP 8.2+ and Laravel 10/11/12 as per `composer.json`.
+
+- Must remain compatible with existing `laravel-whatsapp` structures.
+- Must follow Meta's technical requirements for Tech Providers.
+- Should be easy for developers to integrate into their own Laravel applications.
+- Handle multi-tenant scenarios (multiple WABAs/Tokens) if applicable.
 
 ## Known context
-- No existing `tests` directory.
-- `composer.json` is missing `require-dev` for testing tools like `phpunit` and `testbench`.
-- Core features to test:
-    - `WhatsAppService`: Sending messages, token creation, token consumption.
-    - `WebhookController`: Verification, status updates, inbound message handling (including tokens).
-    - `Models`: Scopes and attribute casting.
-    - `Migrations`: Ensuring schema loads correctly.
+
+- The package already handles basic message sending and webhook verification.
+- Template management is partly implemented.
+- `WhatsappAccount` and `WhatsappToken` models exist.
+- Documentation for Meta Cloud API and Business Management API is key.
 
 ## Risks
-- **External Dependencies**: Dependence on `Http` facade requires careful mocking.
-- **WABA mapping**: Testing multi-account logic requires setting up multiple `WhatsappAccount` records in a test database (SQLite in-memory).
-- **Mixed Message Parsing**: Edge cases in `consumeToken` regex/contains logic need thorough coverage.
+
+- Meta's API frequently changes (versioning).
+- Embedded Signup requires specific Meta App configurations (permissions, features).
+- Webhook scaling for many customers.
+- Security of PIN management and access tokens.
+- Complexity of WhatsApp Flows (interactive JSON structures).
 
 ## Options (2–4)
 
-### 1. Minimal PHPUnit Setup
-Just add `phpunit` and some unit tests for non-Laravel logic.
-- **Pros**: Lightweight.
-- **Cons**: Cannot easily test models, migrations, or service providers.
-
-### 2. Orchestra Testbench (Recommended)
-Industry standard for Laravel package testing.
-- **Pros**: Allows testing full Laravel integration (Migrations, Facades, Service Providers).
-- **Cons**: Slightly higher setup complexity (requires a `TestCase.php` that extends Testbench).
-
-### 3. Pest Framework
-A modern, expressive testing framework built on top of PHPUnit.
-- **Pros**: Very readable, easy to use higher-order tests.
-- **Cons**: Another dependency; user might prefer standard PHPUnit.
+1. **Monolithic Approach**: Add all features directly into the main `WhatsAppService`.
+   - _Pros_: Simple discovery.
+   - _Cons_: Service class will become bloated.
+2. **Domain-Driven Services**: Separate features into dedicated services (e.g., `OnboardingService`, `FlowsService`, `MediaService`).
+   - _Pros_: Cleaner code, easier to maintain.
+   - _Cons_: More files to manage.
+3. **Trait-Based Service**: Use traits in `WhatsAppService` to group related functionality.
+   - _Pros_: Keeps API surface single-point but organized code.
+   - _Cons_: Traits can become "magic" and hard to track.
 
 ## Recommendation
-**Option 2 (Orchestra Testbench with PHPUnit)** is recommended. It provides the best balance of power and compatibility for a Laravel package, allowing us to test exactly how the package interacts with a Laravel application.
+
+Option 2: **Domain-Driven Services**. Given the breadth of requirements (Flows, Onboarding, Assets, Profile, Media), separate services will be much cleaner. I'll create a namespace `ESolution\WhatsApp\Services\TechProvider` and put these specialized services there. The main `WhatsAppService` can act as a gateway or developers can use these specialized services directly.
 
 ## Acceptance criteria
-- [ ] `composer.json` updated with `phpunit`, `orchestra/testbench`, and `mockery`.
-- [ ] `tests` directory created with `TestCase.php` configuration.
-- [ ] **Unit Tests**:
-    - `NormalizesPhoneNumbers` trait logic.
-    - Token generation formats (`alphanumeric`, `numeric`, `uuid`).
-- [ ] **Integration Tests**:
-    - `WhatsappToken` model scopes (active/expired).
-    - `WhatsAppService::consumeToken` with mixed messages.
-    - `WebhookController` handles Meta payloads and triggers token verification.
-- [ ] GitHub Actions (optional but recommended) setup for CI.
+
+- Developers can trigger an Embedded Signup flow and receive the necessary assets (WABA ID, Token).
+- Phone numbers can be listed and retrieved with metadata (status, quality).
+- Business profile fields can be updated via the API.
+- Webhooks correctly ingest status updates and incoming messages for any connected WABA.
+- Media can be uploaded and retrieved/deleted.
+- WhatsApp Flows (interactive forms) can be created, updated, and published.
+- Analytics and health status are available via the Graph API integration.
