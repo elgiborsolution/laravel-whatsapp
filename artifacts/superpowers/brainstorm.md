@@ -1,51 +1,48 @@
-## Goal
+# Brainstorm: WhatsApp API Implementation
 
-Implement support for Meta Tech Provider registration and capability requirements in the `laravel-whatsapp` package. This includes streamlining customer onboarding via Embedded Signup, managing assets, registration, business profiles, media, flows, and analytics.
+## Goal
+Create a set of API endpoints to expose the following functionalities:
+1. **Phone Number / Assets**: List, get details, register, and verify phone numbers.
+2. **Flows**: Create, update, publish, and list WhatsApp Flows.
+3. **Media**: Upload, retrieve, and delete media files.
+4. **Onboarding**: Handle token exchange and WABA discovery from Embedded Signup.
+5. **Profile**: Get and update WhatsApp Business Profile.
+6. **Analytics**: Retrieve WABA metrics and phone number health status.
 
 ## Constraints
-
-- Must remain compatible with existing `laravel-whatsapp` structures.
-- Must follow Meta's technical requirements for Tech Providers.
-- Should be easy for developers to integrate into their own Laravel applications.
-- Handle multi-tenant scenarios (multiple WABAs/Tokens) if applicable.
+- **Framework**: Laravel package structure.
+- **Consistency**: Must follow the existing Controller-Service pattern.
+- **Security**: Routes must use `whatsapp.routes_middleware` (typically `api` or `auth:api`).
+- **Dependency**: Must use existing `WhatsappAccount` records to retrieve tokens/IDs.
 
 ## Known context
-
-- The package already handles basic message sending and webhook verification.
-- Template management is partly implemented.
-- `WhatsappAccount` and `WhatsappToken` models exist.
-- Documentation for Meta Cloud API and Business Management API is key.
+- Core logic is already implemented in `src/Services/TechProvider/` services:
+    - `AssetService`
+    - `FlowsService`
+    - `MediaService`
+    - `OnboardingService`
+    - `ProfileService`
+    - `AnalyticsService`
+- Current routes are defined in `src/routes.php`.
+- Existing controllers occupy `src/Http/Controllers/`.
 
 ## Risks
-
-- Meta's API frequently changes (versioning).
-- Embedded Signup requires specific Meta App configurations (permissions, features).
-- Webhook scaling for many customers.
-- Security of PIN management and access tokens.
-- Complexity of WhatsApp Flows (interactive JSON structures).
+- **Rate Limits**: Excessive API calls to Meta Graph API.
+- **Security**: Ensuring users can only manage assets for accounts they own (if multiple users share one Laravel instance).
+- **Complexity**: WhatsApp Flows require JSON asset uploads which might need specific request handling (multipart/form-data).
 
 ## Options (2–4)
-
-1. **Monolithic Approach**: Add all features directly into the main `WhatsAppService`.
-   - _Pros_: Simple discovery.
-   - _Cons_: Service class will become bloated.
-2. **Domain-Driven Services**: Separate features into dedicated services (e.g., `OnboardingService`, `FlowsService`, `MediaService`).
-   - _Pros_: Cleaner code, easier to maintain.
-   - _Cons_: More files to manage.
-3. **Trait-Based Service**: Use traits in `WhatsAppService` to group related functionality.
-   - _Pros_: Keeps API surface single-point but organized code.
-   - _Cons_: Traits can become "magic" and hard to track.
+1. **Granular Controllers**: Create a separate controller for each service (`AssetController`, `FlowsController`, etc.).
+2. **Management Controller**: Group Assets, Profile, and Analytics into a single `ManagementController`, while keeping `Flows` and `Media` separate.
+3. **Internal API Only**: Use these services only within other backend processes and do not expose them via HTTP. (Rejected based on user request).
 
 ## Recommendation
-
-Option 2: **Domain-Driven Services**. Given the breadth of requirements (Flows, Onboarding, Assets, Profile, Media), separate services will be much cleaner. I'll create a namespace `ESolution\WhatsApp\Services\TechProvider` and put these specialized services there. The main `WhatsAppService` can act as a gateway or developers can use these specialized services directly.
+**Option 1: Granular Controllers**.
+This approach provides the best clarity and maintainability. Each controller will map directly to its corresponding service, making it easy to find and update logic. It also keeps the codebase clean as the number of endpoints grows.
 
 ## Acceptance criteria
-
-- Developers can trigger an Embedded Signup flow and receive the necessary assets (WABA ID, Token).
-- Phone numbers can be listed and retrieved with metadata (status, quality).
-- Business profile fields can be updated via the API.
-- Webhooks correctly ingest status updates and incoming messages for any connected WABA.
-- Media can be uploaded and retrieved/deleted.
-- WhatsApp Flows (interactive forms) can be created, updated, and published.
-- Analytics and health status are available via the Graph API integration.
+- [ ] New controllers created: `AssetController`, `FlowsController`, `MediaController`, `OnboardingController`, `ProfileController`, `AnalyticsController`.
+- [ ] Routes registered in `routes.php` under the `whatsapp` prefix.
+- [ ] Endpoints support basic CRUD or action for each service method.
+- [ ] Validation implemented for request payloads (especially for Profile updates and Flow creation).
+- [ ] Successful integration test or manual verification for each endpoint.

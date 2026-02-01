@@ -1,91 +1,87 @@
-## Goal
+# Implementation Plan - WhatsApp Tech Provider APIs
 
-Extend `laravel-whatsapp` to support Meta Tech Provider requirements, including customer onboarding, asset management, registration, profile management, media handling, flows, and analytics. Documentation and testing will be prioritized as requested.
+Create a comprehensive set of API endpoints to manage WhatsApp assets, flows, media, onboarding, profiles, analytics, and inbound tokens.
 
-## Assumptions
+## Proposed Changes
 
-- The developer using the package has a Meta App with Tech Provider capabilities.
-- The Graph API version to be used is v23.0.
-- Existing `WhatsappAccount` model is sufficient for storing basic credentials.
+### Controllers
+Create 7 new controllers to handle the respective functionalities.
 
-## Plan
+#### [NEW] [AssetController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/AssetController.php)
+- `index`: List phone numbers.
+- `show`: Get phone number details.
+- `register`: Register a phone number.
+- `verify`: Verify a phone number.
 
-### 1. Onboarding & Assets
+#### [NEW] [FlowsController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/FlowsController.php)
+- `index`: List flows.
+- `store`: Create a new flow.
+- `updateAsset`: Upload flow asset (JSON).
+- `publish`: Publish a flow.
 
-- **Files**:
-  - [NEW] `src/Services/TechProvider/OnboardingService.php`
-  - [NEW] `src/Services/TechProvider/AssetService.php`
-  - [NEW] `tests/Unit/TechProvider/OnboardingTest.php`
-- **Change**:
-  - `OnboardingService`: Handle Embedded Signup tokens, retrieve WABA IDs, and provision accounts.
-  - `AssetService`: List phone numbers and WABAs from the Business Management API.
-- **Verify**:
-  - Run `php vendor/bin/phpunit tests/Unit/TechProvider/OnboardingTest.php`
+#### [NEW] [MediaController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/MediaController.php)
+- `store`: Upload media.
+- `show`: Get media details.
+- `destroy`: Delete media.
 
-### 2. Registration & Profile
+#### [NEW] [OnboardingController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/OnboardingController.php)
+- `exchangeToken`: Exchange short-lived token for long-lived.
+- `debugToken`: Get WABA info via token.
 
-- **Files**:
-  - [MODIFY] `src/Services/TechProvider/AssetService.php`
-  - [NEW] `src/Services/TechProvider/ProfileService.php`
-  - [NEW] `tests/Unit/TechProvider/ProfileTest.php`
-- **Change**:
-  - `AssetService`: Add `registerPhoneNumber` (with PIN) and `verifyPhoneNumber`.
-  - `ProfileService`: Methods to update/read business profile (about, email, website).
-- **Verify**:
-  - Run `php vendor/bin/phpunit tests/Unit/TechProvider/ProfileTest.php`
+#### [NEW] [ProfileController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/ProfileController.php)
+- `show`: Get business profile.
+- `update`: Update business profile.
 
-### 3. Media & Messaging Actions
+#### [NEW] [AnalyticsController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/AnalyticsController.php)
+- `wabaMetrics`: Get WABA messaging metrics.
+- `phoneHealth`: Get phone number health status.
 
-- **Files**:
-  - [NEW] `src/Services/TechProvider/MediaService.php`
-  - [MODIFY] `src/Services/WhatsAppService.php`
-  - [NEW] `tests/Unit/TechProvider/MediaTest.php`
-- **Change**:
-  - `MediaService`: Add `upload`, `download`, and `delete` media.
-  - `WhatsAppService`: Ensure `markAsRead` is working correctly with accounts.
-- **Verify**:
-  - Run `php vendor/bin/phpunit tests/Unit/TechProvider/MediaTest.php`
+#### [NEW] [TokenController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/TokenController.php)
+- `store`: Create a new inbound token (OTP/Voucher).
+- `consume`: Manually verify/consume a token.
 
-### 4. Flows & Templates
+---
 
-- **Files**:
-  - [NEW] `src/Services/TechProvider/FlowsService.php`
-  - [MODIFY] `src/Services/WhatsAppService.php`
-  - [NEW] `tests/Unit/TechProvider/FlowsTest.php`
-- **Change**:
-  - `FlowsService`: Create, Update, Publish, and List WhatsApp Flows.
-  - `WhatsAppService`: Enhance template methods to retrieve quality/status and handle non-creation operations.
-- **Verify**:
-  - Run `php vendor/bin/phpunit tests/Unit/TechProvider/FlowsTest.php`
+### Routing
 
-### 5. Analytics & Webhooks
+#### [MODIFY] [routes.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/routes.php)
+- Register the new routes under the existing `whatsapp` prefix and middleware group.
 
-- **Files**:
-  - [NEW] `src/Services/TechProvider/AnalyticsService.php`
-  - [MODIFY] `src/Http/Controllers/WebhookController.php`
-  - [NEW] `tests/Feature/TechProvider/WebhookTest.php`
-- **Change**:
-  - `AnalyticsService`: Fetch usage analytics and health diagnostics.
-  - `WebhookController`: Ingest message status transitions and rich media inbound events.
-- **Verify**:
-  - Run `php vendor/bin/phpunit tests/Feature/TechProvider/WebhookTest.php`
+---
 
-### 6. Documentation
+### Documentation
 
-- **Files**:
-  - [MODIFY] `README.md`
-- **Change**:
-  - Add documentation for all new Tech Provider features (Embedded Signup, Flows, Registration, Analytics).
-- **Verify**:
-  - Manual review of the `README.md` content.
+#### [MODIFY] [README.md](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/README.md)
+- Update the "Tech Provider (Partner) Services" and "Inbound Tokens" sections to include documentation for the new API endpoints.
 
-## Risks & mitigations
+---
 
-- **Meta API changes**: Version the base URL and use modular services.
-- **Complexity of Flows**: Provide clear examples in the README.
+### Testing
 
-## Rollback plan
+#### [NEW] [TechProviderApiTest.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/tests/Feature/TechProviderApiTest.php)
+- Implement feature tests for each new endpoint using `Http::fake()` to mock Meta API responses (where applicable) and standard request/response testing.
 
-- Revert via git: `git checkout .`. New files can be deleted manually or via `git clean -fd`.
+## Verification Plan
 
-**Approve this plan? Reply APPROVED if it looks good.**
+### Automated Tests
+Run the newly created feature tests:
+```bash
+./vendor/bin/phpunit tests/Feature/TechProviderApiTest.php
+```
+
+### Manual Verification
+1. Verify routes are registered:
+```bash
+php artisan route:list --path=whatsapp
+```
+2. For local testing:
+- Use Postman to call the endpoints with a valid `WhatsappAccount` (for assets/flows/media/etc) or phone number (for tokens).
+
+## Rollback Plan
+- Delete New Controllers.
+- Revert changes to `src/routes.php`.
+- Revert changes to `README.md`.
+- Delete `tests/Feature/TechProviderApiTest.php`.
+
+---
+Approve this plan? Reply APPROVED if it looks good.
