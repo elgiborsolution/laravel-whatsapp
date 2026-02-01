@@ -12,10 +12,13 @@ use ESolution\WhatsApp\Models\{
     WhatsappBroadcastRecipient
 };
 use ESolution\WhatsApp\Traits\NormalizesPhoneNumbers;
+use ESolution\WhatsApp\Services\WhatsAppService;
 
 class WebhookController extends Controller
 {
     use NormalizesPhoneNumbers;
+
+    public function __construct(protected WhatsAppService $whatsapp) {}
     /**
      * GET verification endpoint used by Meta (hub.challenge)
      */
@@ -118,6 +121,14 @@ class WebhookController extends Controller
             $stored->wa_message_id = $msg['id'] ?? null;
             $stored->status        = 'received';
             $stored->save();
+
+            // Detect and consume tokens (OTP, Voucher, etc.)
+            if ($type === 'text') {
+                $text = data_get($msg, 'text.body');
+                if ($text) {
+                    $this->whatsapp->consumeToken($from, $text);
+                }
+            }
 
             // Detect call permission reply (supports call_permission_reply + fallback keywords/buttons)
             $decision = $this->detectCallPermissionDecision($msg);
