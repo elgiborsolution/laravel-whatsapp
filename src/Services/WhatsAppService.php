@@ -3,10 +3,13 @@
 namespace ESolution\WhatsApp\Services;
 
 use ESolution\WhatsApp\Models\{WhatsappAccount, WhatsAppMessage};
+use ESolution\WhatsApp\Traits\NormalizesPhoneNumbers;
 use Illuminate\Support\Facades\Http;
 
 class WhatsAppService
 {
+    use NormalizesPhoneNumbers;
+
     public function __construct(protected array $config) {}
 
     protected function endpoint(WhatsappAccount $acc, string $path): string
@@ -147,12 +150,5 @@ class WhatsAppService
         $url = rtrim($this->config['base_url'],'/')."/{$acc->waba_id}/message_templates";
         $res = $this->client($acc)->delete($url, ['name'=>$name,'language'=>$language]);
         return $res->successful();
-    }
-
-    public function normalizePhone(string $to): string
-    {
-        $n = preg_replace('/\D+/', '', $to);
-        if (str_starts_with($n, '0')) $n = '62'.substr($n,1);
-        return $n;
     }
 }
