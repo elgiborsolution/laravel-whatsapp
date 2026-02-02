@@ -1,87 +1,43 @@
-# Implementation Plan - WhatsApp Tech Provider APIs
+## Goal
+Add a capability for each phone number to forward data that the webhook received to another webhook URL, ensuring reliability through asynchronous queued processing.
 
-Create a comprehensive set of API endpoints to manage WhatsApp assets, flows, media, onboarding, profiles, analytics, and inbound tokens.
+## Assumptions
+- Laravel queue is configured and running.
+- Incoming Meta webhooks contain `phone_number_id` in the metadata to identify the account.
 
-## Proposed Changes
+## Plan
 
-### Controllers
-Create 7 new controllers to handle the respective functionalities.
+### 1. Database Schema Update
+- **Files**: `database/migrations/[timestamp]_add_webhook_forward_url_to_whatsapp_accounts_table.php` [NEW]
+- **Change**: Add nullable `webhook_forward_url` string column to `whatsapp_accounts` table.
+- **Verify**: Run `php artisan migrate` and check table structure.
 
-#### [NEW] [AssetController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/AssetController.php)
-- `index`: List phone numbers.
-- `show`: Get phone number details.
-- `register`: Register a phone number.
-- `verify`: Verify a phone number.
+### 2. Update Model
+- **Files**: `src/Models/WhatsappAccount.php` [MODIFY]
+- **Change**: Add `webhook_forward_url` to the `$fillable` array.
+- **Verify**: Inspect the file content.
 
-#### [NEW] [FlowsController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/FlowsController.php)
-- `index`: List flows.
-- `store`: Create a new flow.
-- `updateAsset`: Upload flow asset (JSON).
-- `publish`: Publish a flow.
+### 3. Create Forwarding Job
+- **Files**: `src/Jobs/ForwardWebhookJob.php` [NEW]
+- **Change**: Implement a queued job that takes `url` and `payload`, then performs a POST request using `Http::withOptions(['verify' => false])->retry(3, 100)->post($url, $payload)`.
+- **Verify**: Unit test for the job.
 
-#### [NEW] [MediaController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/MediaController.php)
-- `store`: Upload media.
-- `show`: Get media details.
-- `destroy`: Delete media.
+### 4. Update Webhook Controller
+- **Files**: `src/Http/Controllers/WebhookController.php` [MODIFY]
+- **Change**: In `handle()` method, extract `phone_number_id` from the payload. Lookup the corresponding `WhatsappAccount`. If `webhook_forward_url` is present, dispatch `ForwardWebhookJob`.
+- **Verify**: Integrated test with `Http::fake()`.
 
-#### [NEW] [OnboardingController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/OnboardingController.php)
-- `exchangeToken`: Exchange short-lived token for long-lived.
-- `debugToken`: Get WABA info via token.
+### 5. Documentation Update
+- **Files**: `README.md` [MODIFY]
+- **Change**: Add a section about Webhook Forwarding configuration.
+- **Verify**: Inspect README.
 
-#### [NEW] [ProfileController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/ProfileController.php)
-- `show`: Get business profile.
-- `update`: Update business profile.
+## Risks & mitigations
+- **Risk**: Target webhook is slow or down.
+- **Mitigation**: Using a queued job with Laravel's built-in retry mechanism (`tries`, `backoff`).
+- **Risk**: High volume of webhooks flooding the queue.
+- **Mitigation**: Ensure the job is lightweight and use a dedicated queue if necessary (configurable via `config/whatsapp.php`).
 
-#### [NEW] [AnalyticsController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/AnalyticsController.php)
-- `wabaMetrics`: Get WABA messaging metrics.
-- `phoneHealth`: Get phone number health status.
-
-#### [NEW] [TokenController.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/Http/Controllers/TokenController.php)
-- `store`: Create a new inbound token (OTP/Voucher).
-- `consume`: Manually verify/consume a token.
-
----
-
-### Routing
-
-#### [MODIFY] [routes.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/src/routes.php)
-- Register the new routes under the existing `whatsapp` prefix and middleware group.
-
----
-
-### Documentation
-
-#### [MODIFY] [README.md](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/README.md)
-- Update the "Tech Provider (Partner) Services" and "Inbound Tokens" sections to include documentation for the new API endpoints.
-
----
-
-### Testing
-
-#### [NEW] [TechProviderApiTest.php](file:///Users/e-solution/Documents/Packages/laravel-whatsapp/tests/Feature/TechProviderApiTest.php)
-- Implement feature tests for each new endpoint using `Http::fake()` to mock Meta API responses (where applicable) and standard request/response testing.
-
-## Verification Plan
-
-### Automated Tests
-Run the newly created feature tests:
-```bash
-./vendor/bin/phpunit tests/Feature/TechProviderApiTest.php
-```
-
-### Manual Verification
-1. Verify routes are registered:
-```bash
-php artisan route:list --path=whatsapp
-```
-2. For local testing:
-- Use Postman to call the endpoints with a valid `WhatsappAccount` (for assets/flows/media/etc) or phone number (for tokens).
-
-## Rollback Plan
-- Delete New Controllers.
-- Revert changes to `src/routes.php`.
-- Revert changes to `README.md`.
-- Delete `tests/Feature/TechProviderApiTest.php`.
-
----
-Approve this plan? Reply APPROVED if it looks good.
+## Rollback plan
+- Delete the migration and run `php artisan migrate:rollback`.
+- Remove the job class and controller logic changes.

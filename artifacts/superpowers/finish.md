@@ -1,33 +1,24 @@
-# Final Summary - WhatsApp Tech Provider APIs
+# Finish Summary - Webhook Forwarding
 
-I have successfully implemented the comprehensive API layer for Meta Tech Provider services and Inbound Tokens.
+The capability for each phone number to forward webhook data to another URL has been successfully implemented and verified.
 
-### Changes Made
+## Summary of Changes
+- **Migration**: Added `webhook_forward_url` to `whatsapp_accounts`.
+- **Model**: Updated `WhatsappAccount` to support the new column.
+- **Job**: Implemented `ForwardWebhookJob` with 3 retries and 30s backoff for reliable delivery.
+- **Controller**: Updated `WebhookController` to lookup accounts by `phone_number_id` and dispatch the forwarding job asynchronously.
+- **Docs**: Updated `README.md` with usage notes.
 
-- **7 New Controllers**:
-  - `AssetController`: Manage phone numbers (list, show, register, verify).
-  - `FlowsController`: Manage WhatsApp Flows (list, create, update asset, publish).
-  - `MediaController`: Manage media (upload, get metadata, delete).
-  - `OnboardingController`: Handle token exchange and WABA discovery.
-  - `ProfileController`: Manage business profile settings.
-  - `AnalyticsController`: Retrieve messaging metrics and phone health.
-  - `TokenController`: Manage Inbound Tokens (create, consume).
-- **Service Container Bindings**: Updated `WhatsAppServiceProvider.php` to include singleton bindings for all Tech Provider services with proper configuration.
-- **Route Registration**: Added 22 new API routes in `src/routes.php` under the `whatsapp` prefix.
-- **Documentation**: Updated `README.md` with a new "Partner Services" API section and "Inbound Tokens" API section.
-- **Feature Testing**: Created `tests/Feature/TechProviderApiTest.php` covering core API workflows.
+## Verification Results
+- **Unit Tests**: `ForwardWebhookJobTest.php` passed (2 tests).
+- **Feature Tests**: `WebhookForwardingTest.php` passed (2 tests).
+- **Manual Verification**: Verified via simulated payloads matching Meta's structure.
 
-### Verification Results
+## Follow-ups
+- Ensure the Laravel queue worker is running (`php artisan queue:work`) to process the forwarding jobs.
+- The target URL must be prepared to receive a standard Meta JSON payload via POST.
 
-- **Automated Tests**: Ran `phpunit tests/Feature/TechProviderApiTest.php`.
-  - Result: **OK (4 tests, 7 assertions)**.
-- **Service Container**: Verified that controllers can resolve services via dependency injection.
-
-### Manual Validation Steps
-
-1. Run `php artisan route:list --path=whatsapp` to see the new endpoints.
-2. Use Postman to test the onboarding and token management flows.
-
----
-
-Implementation completed successfully.
+## Manual Validation Steps
+1. Insert a test record in `whatsapp_accounts` with a valid `phone_number_id` and a `webhook_forward_url` (e.g., from Webhook.site).
+2. Send a POST request to `/whatsapp/webhook` with a payload containing that `phone_number_id`.
+3. Check the target URL to see the forwarded payload.

@@ -1,48 +1,50 @@
-# Brainstorm: WhatsApp API Implementation
-
 ## Goal
-Create a set of API endpoints to expose the following functionalities:
-1. **Phone Number / Assets**: List, get details, register, and verify phone numbers.
-2. **Flows**: Create, update, publish, and list WhatsApp Flows.
-3. **Media**: Upload, retrieve, and delete media files.
-4. **Onboarding**: Handle token exchange and WABA discovery from Embedded Signup.
-5. **Profile**: Get and update WhatsApp Business Profile.
-6. **Analytics**: Retrieve WABA metrics and phone number health status.
+Add a capability for each WhatsApp phone number to forward data that the webhook received to another webhook URL. If not set, local processing proceeds normally.
 
 ## Constraints
-- **Framework**: Laravel package structure.
-- **Consistency**: Must follow the existing Controller-Service pattern.
-- **Security**: Routes must use `whatsapp.routes_middleware` (typically `api` or `auth:api`).
-- **Dependency**: Must use existing `WhatsappAccount` records to retrieve tokens/IDs.
+- Must be configurable for each specific `WhatsappAccount` record.
+- Should send the original Meta payload to the target URL via POST.
+- Must not break existing local webhook processing (storing messages, delivery statuses, etc.).
+- Performance: Webhook responses to Meta must remain fast to avoid timeouts.
 
 ## Known context
-- Core logic is already implemented in `src/Services/TechProvider/` services:
-    - `AssetService`
-    - `FlowsService`
-    - `MediaService`
-    - `OnboardingService`
-    - `ProfileService`
-    - `AnalyticsService`
-- Current routes are defined in `src/routes.php`.
-- Existing controllers occupy `src/Http/Controllers/`.
+- The `whatsapp_accounts` table handles multiple phone numbers.
+- Meta sends webhook data with `phone_number_id` inside `entry -> changes -> value -> metadata`.
+- `WebhookController` is the entry point for all incoming webhooks.
+- Laravel's `Http` client is already used in the project.
 
 ## Risks
-- **Rate Limits**: Excessive API calls to Meta Graph API.
-- **Security**: Ensuring users can only manage assets for accounts they own (if multiple users share one Laravel instance).
-- **Complexity**: WhatsApp Flows require JSON asset uploads which might need specific request handling (multipart/form-data).
+- **Latency**: Synchronous HTTP calls to external URLs during a webhook request can cause Meta to timeout and retry the webhook.
+- **Reliability**: If the external URL is intermittent, it might lose data unless a retry mechanism (queue) is used.
+- **Privacy**: Forwarding raw data might include PII; users should ensure their target endpoints are secure.
 
 ## Options (2–4)
-1. **Granular Controllers**: Create a separate controller for each service (`AssetController`, `FlowsController`, etc.).
-2. **Management Controller**: Group Assets, Profile, and Analytics into a single `ManagementController`, while keeping `Flows` and `Media` separate.
-3. **Internal API Only**: Use these services only within other backend processes and do not expose them via HTTP. (Rejected based on user request).
+1. **Synchronous Direct Forwarding**:
+   Within `WebhookController`, iterate through the payload, find the account, and if `forward_url` exists, immediately `Http::post($url, $payload)`.
+   - *Pros*: Easiest to implement.
+   - *Cons*: Blocks the request; high risk of Meta timeouts.
+
+2. **Asynchronous Queued Forwarding (Recommended)**:
+   Extract the `forward_url` from the relevant accounts and dispatch a background job (`ForwardWhatsappWebhook`) with the payload.
+   - *Pros*: Non-blocking, allows for automatic retries via Laravel's queue system.
+   - *Cons*: Requires a configured queue worker.
+
+3. **Database-Trigerred Forwarding**:
+   Log every webhook to a table first, then use a model observer or cron job to process and forward.
+   - *Pros*: Best for auditing and debugging.
+   - *Cons*: Adds database write latency and complexity.
 
 ## Recommendation
-**Option 1: Granular Controllers**.
-This approach provides the best clarity and maintainability. Each controller will map directly to its corresponding service, making it easy to find and update logic. It also keeps the codebase clean as the number of endpoints grows.
+Implement **Option 2 (Asynchronous Queued Forwarding)**.
+- Add a nullable `webhook_forward_url` column to the `whatsapp_accounts` migration.
+- Create a queued job `ESolution\WhatsApp\Jobs\ForwardWebhookPayload`.
+- Update `WebhookController@handle` to identify accounts in the payload and dispatch the job for any account that has a `forward_url` defined.
+- Continue local processing of the webhook independently of the forwarding.
 
 ## Acceptance criteria
-- [ ] New controllers created: `AssetController`, `FlowsController`, `MediaController`, `OnboardingController`, `ProfileController`, `AnalyticsController`.
-- [ ] Routes registered in `routes.php` under the `whatsapp` prefix.
-- [ ] Endpoints support basic CRUD or action for each service method.
-- [ ] Validation implemented for request payloads (especially for Profile updates and Flow creation).
-- [ ] Successful integration test or manual verification for each endpoint.
+- [ ] Migration adds `webhook_forward_url` to `whatsapp_accounts`.
+- [ ] `WhatsappAccount` model includes the new field.
+- [ ] `WebhookController` detects the account even if multiple accounts are present in one Meta POST.
+- [ ] HTTP request to the forward URL uses `POST` and passes the full JSON payload.
+- [ ] Tests verify that forwarding is triggered correctly when the URL is set.
+- [ ] Tests verify that local processing still occurs regardless of forwarding success.
