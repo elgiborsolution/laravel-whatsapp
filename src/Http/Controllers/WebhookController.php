@@ -13,6 +13,8 @@ use ESolution\WhatsApp\Models\{
 };
 use ESolution\WhatsApp\Traits\NormalizesPhoneNumbers;
 use ESolution\WhatsApp\Services\WhatsAppService;
+use ESolution\WhatsApp\Models\WhatsappAccount;
+use ESolution\WhatsApp\Jobs\ForwardWebhookJob;
 
 class WebhookController extends Controller
 {
@@ -38,6 +40,16 @@ class WebhookController extends Controller
     public function handle(Request $r)
     {
         $payload = $r->all();
+
+        // Check for forwarding URL
+        $phoneId = data_get($payload, 'entry.0.changes.0.value.metadata.phone_number_id');
+        if ($phoneId) {
+            $account = WhatsappAccount::where('phone_number_id', $phoneId)->first();
+            if ($account && $account->webhook_forward_url) {
+                ForwardWebhookJob::dispatch($account->webhook_forward_url, $payload)
+                    ->onQueue(config('whatsapp.queue'));
+            }
+        }
 
         foreach ((array)($payload['entry'] ?? []) as $entry) {
             foreach ((array)($entry['changes'] ?? []) as $change) {

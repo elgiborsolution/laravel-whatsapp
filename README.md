@@ -300,6 +300,7 @@ All routes are prefixed with `/whatsapp/` (customizable in config).
 - **Verify**: Meta calls `GET /webhook?hub_mode=subscribe&hub_verify_token=xxx&hub_challenge=1234`
 - **Status**: Meta sends `POST` updates with message status (`sent`, `delivered`, `read`, `failed`).
 - **Call Permission**: Meta sends `POST` updates with call_permission_reply status (`accept`, `reject`).
+- **Forwarding**: If `webhook_forward_url` is set for an account, the raw payload is forwarded to that URL via a queued POST request.
 
 Statuses are saved to:
 

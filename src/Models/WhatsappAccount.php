@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class WhatsappAccount extends Model
 {
-    protected $fillable = ['name','waba_id','phone_number_id','access_token','is_default','meta'];
+    protected $fillable = ['name', 'waba_id', 'phone_number_id', 'access_token', 'is_default', 'meta', 'webhook_forward_url'];
     protected $casts = ['meta' => 'array', 'is_default' => 'boolean'];
 
     public static function resolve(?int $id = null): self
