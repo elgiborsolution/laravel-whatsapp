@@ -19,7 +19,7 @@ class WhatsAppService
         return "{$base}/{$acc->phone_number_id}/{$path}";
     }
 
-    protected function client(WhatsappAccount $acc)
+    public function client(WhatsappAccount $acc)
     {
         return Http::withToken($acc->access_token)
             ->acceptJson()
@@ -224,5 +224,10 @@ class WhatsAppService
         $min = pow(10, $length - 1);
         $max = pow(10, $length) - 1;
         return (string) rand($min, $max);
+    }
+
+    public function getConfig(): array
+    {
+        return $this->config;
     }
 }
